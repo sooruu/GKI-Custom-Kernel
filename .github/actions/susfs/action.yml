@@ -84,5 +84,11 @@ runs:
         # Apply base SUSFS patches
         cp "${{ github.workspace }}/susfs4ksu/kernel_patches/fs/"* "${{ github.workspace }}/kernel/common/fs/"
         cp "${{ github.workspace }}/susfs4ksu/kernel_patches/include/linux/"* "${{ github.workspace }}/kernel/common/include/linux/"
+        
+        # FIX FOR MISSING FORWARD DECLARATION IN GKI-ANDROID14-6.1
+        if ! grep -q "susfs_set_i_state_on_external_dir" "${{ github.workspace }}/kernel/common/include/linux/susfs.h"; then
+            echo "void susfs_set_i_state_on_external_dir(void __user **user_info);" >> "${{ github.workspace }}/kernel/common/include/linux/susfs.h"
+        fi
+
         cp ${{ github.workspace }}/susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./
         patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch || true
