@@ -233,6 +233,11 @@ jobs:
       with:
         kernel_version: ${{ steps.parse.outputs.kernel_version }}
 
+    - name: Apply BORE Scheduler Patches
+      uses: ./.github/actions/apply-bore
+      with:
+        kernel_version: ${{ steps.parse.outputs.kernel_version }}
+
     - name: Configure Kernel Options
       uses: ./.github/actions/configure-kernel
       with:

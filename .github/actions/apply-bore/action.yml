@@ -1,0 +1,29 @@
+name: 'Apply BORE Scheduler Patches'
+description: 'Applies BORE CPU scheduler patches depending on the kernel version.'
+inputs:
+  kernel_version:
+    description: 'Kernel version (e.g., 6.1 or 6.6)'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Apply BORE Patches
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        VERSION="${{ inputs.kernel_version }}"
+        PATCH_DIR="${{ github.workspace }}/kernel_patches/bore/$VERSION"
+        
+        if [ -d "$PATCH_DIR" ]; then
+          echo "Applying BORE patches for kernel $VERSION..."
+          shopt -s nullglob
+          for patch in "$PATCH_DIR"/*.patch; do
+            if [ -f "$patch" ]; then
+              echo "Applying: $patch"
+              patch -p1 --no-backup-if-mismatch < "$patch" || echo "Warning: Patch failed to apply cleanly."
+            fi
+          done
+        else
+          echo "No BORE patches found for kernel version $VERSION."
+        fi
