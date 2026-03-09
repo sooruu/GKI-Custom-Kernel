@@ -16,7 +16,7 @@ runs:
         # Last known-good commit before the susfs_set_i_state_on_external_dir breakage
         PINNED_COMMIT="${{ inputs.ksu_commit }}"
         if [ -z "$PINNED_COMMIT" ]; then
-          PINNED_COMMIT="e66883d0d4ebd608d804db05c208ec4b20d60db3"
+          PINNED_COMMIT="f7c10d1f009474e9490844b352bfca018e93d97b"
         fi
 
         echo "Cloning Wild_KSU and pinning to: $PINNED_COMMIT"
