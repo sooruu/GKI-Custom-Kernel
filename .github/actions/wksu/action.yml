@@ -1,20 +1,34 @@
 name: Setup Wild KSU
-description: Download and configure Wild KSU with version tracking
+description: Download and configure Wild KSU with version tracking - pinned to stable commit
 inputs:
   ksu_commit:
-    description: "KSU Commit"
-    required: true
-    type: string
+    description: "KSU Commit (pinned known-good commit)"
+    required: false
+    default: "e66883d0d4ebd608d804db05c208ec4b20d60db3"
 
 runs:
   using: composite
   steps:
-    - name: Download Wild KSU
+    - name: Download and Pin Wild KSU
       shell: bash
       working-directory: ${{ github.workspace }}/kernel
       run: |
-        # Clone the repository
-        curl -LSs "https://raw.githubusercontent.com/WildKernels/Wild_KSU/stable/kernel/setup.sh" | bash -s ${{ inputs.ksu_commit }}
+        # Last known-good commit before the susfs_set_i_state_on_external_dir breakage
+        PINNED_COMMIT="${{ inputs.ksu_commit }}"
+        if [ -z "$PINNED_COMMIT" ]; then
+          PINNED_COMMIT="e66883d0d4ebd608d804db05c208ec4b20d60db3"
+        fi
+
+        echo "Cloning Wild_KSU and pinning to: $PINNED_COMMIT"
+
+        # Clone full repo so we can checkout any commit
+        git clone https://github.com/WildKernels/Wild_KSU.git Wild_KSU
+        cd Wild_KSU
+        git checkout "$PINNED_COMMIT"
+        cd ..
+
+        # Run the setup script from that pinned version
+        bash Wild_KSU/kernel/setup.sh "$PINNED_COMMIT"
 
     - name: Enable KernelSU Config
       shell: bash
