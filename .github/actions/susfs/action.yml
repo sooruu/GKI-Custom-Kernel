@@ -26,35 +26,15 @@ runs:
         SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
         SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"
         
-        echo "Preparing SUSFS for branch: $SUSFS_BRANCH"
+        echo "Preparing SUSFS for branch: $SUSFS_BRANCH (Forcing Feb 24 Commit)"
         
-        # Parse commit map to find the commit for this branch
-        COMMIT_MAP="${{ inputs.susfs_commit }}"
-        TARGET_COMMIT=""
+        # Hardcode the stable Feb 24 commit
+        TARGET_COMMIT="4bcc4d4469f72bf73a1cb707d6e520f807eddc89"
         
-        if [ -n "$COMMIT_MAP" ]; then
-          # Split by comma
-          IFS=',' read -ra ENTRIES <<< "$COMMIT_MAP"
-          for entry in "${ENTRIES[@]}"; do
-            # Split by colon
-            IFS=':' read -r branch commit <<< "$entry"
-            if [ "$branch" == "$SUSFS_BRANCH" ]; then
-              TARGET_COMMIT="$commit"
-              break
-            fi
-          done
-        fi
-        
-        if [ -n "$TARGET_COMMIT" ]; then
-          echo "Found specific commit for $SUSFS_BRANCH: $TARGET_COMMIT"
-          git clone "$SUSFS_REPO" -b "$SUSFS_BRANCH" susfs4ksu
-          cd susfs4ksu
-          git checkout "$TARGET_COMMIT"
-          cd ..
-        else
-          echo "No specific commit found for $SUSFS_BRANCH, cloning latest..."
-          git clone "$SUSFS_REPO" -b "$SUSFS_BRANCH" --depth=1 susfs4ksu
-        fi
+        git clone "$SUSFS_REPO" -b "$SUSFS_BRANCH" susfs4ksu
+        cd susfs4ksu
+        git checkout "$TARGET_COMMIT"
+        cd ..
         
         SUSFS_VERSION="2.0.0"
         echo "SUSFS_VERSION=$SUSFS_VERSION" >> $GITHUB_ENV
