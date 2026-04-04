@@ -214,6 +214,13 @@ jobs:
     - name: Disable SUSFS in KSU Config
       if: ${{ !contains(inputs.feature_set, 'SUSFS') }}
       run: |
+        # The fragment "# CONFIG_KSU_SUSFS is not set" doesn't reliably override
+        # the Kconfig default on older build systems. Patch the default directly.
+        KSU_KCONFIG="$GITHUB_WORKSPACE/kernel/common/drivers/kernelsu/Kconfig"
+        if [ -f "$KSU_KCONFIG" ]; then
+          sed -i '/^config KSU_SUSFS$/,/^config \|^endmenu/{s/default y/default n/}' "$KSU_KCONFIG"
+          echo "Patched KSU_SUSFS default to n in Kconfig"
+        fi
         cat >> "$GITHUB_WORKSPACE/wild_gki.fragment" << 'EOF'
         # Disable SUSFS (not included in feature set)
         # CONFIG_KSU_SUSFS is not set
