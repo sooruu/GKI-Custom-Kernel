@@ -346,10 +346,15 @@ jobs:
       if: ${{ steps.parse.outputs.kernel_version == '5.4' }}
       working-directory: ${{ github.workspace }}/kernel
       run: |
-        # KSU's Kconfig "select EXT4_FS" and "select KPROBES" when SUSFS is disabled
-        # causes savedefconfig to strip these (since they're auto-selected), failing
-        # the defconfig comparison. Bypass the check.
-        sed -i 's/check_defconfig/true/' common/build.config.gki
+        # KSU's Kconfig "select" directives cause savedefconfig drift.
+        # Bypass check_defconfig by replacing the function in build.sh itself.
+        sed -i 's/check_defconfig() {/check_defconfig() { return 0;/; t' build/build.sh
+        # Also try the build config files
+        for f in common/build.config.gki common/build.config.gki.aarch64 common/build.config.common; do
+          if [ -f "$f" ]; then
+            sed -i 's/check_defconfig/# check_defconfig/' "$f"
+          fi
+        done
 
     - name: Build Kernel
       working-directory: ${{ github.workspace }}/kernel

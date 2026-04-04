@@ -13,14 +13,12 @@ on:
         options: [ Actions, Pre-Release, Release ]
         default: Actions
       feature_set:
-        description: "Feature Set"
+        description: "Feature Set (KSU not supported on 5.4)"
         type: choice
         options:
-          - WKSU+BBG
-          - WKSU
           - BBG
           - None
-        default: WKSU+BBG
+        default: BBG
       ksu_commit:
         description: "KSU Commit (optional)"
         type: string
@@ -56,7 +54,7 @@ jobs:
       anykernel_commit: ${{ needs.fetch-commits.outputs.anykernel_commit }}
       patches_commit: ${{ needs.fetch-commits.outputs.patches_commit }}
       susfs_commit: ${{ needs.fetch-commits.outputs.susfs_commit }}
-      feature_set: ${{ inputs.feature_set || 'WKSU+BBG' }}
+      feature_set: ${{ inputs.feature_set || 'BBG' }}
     secrets: inherit
 
   rej:
