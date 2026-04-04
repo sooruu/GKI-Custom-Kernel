@@ -211,6 +211,14 @@ jobs:
         os_patch_level: ${{ steps.parse.outputs.os_patch_level }}
         sublevel: ${{ steps.extract.outputs.sublevel }}
 
+    - name: Disable SUSFS in KSU Config
+      if: ${{ !contains(inputs.feature_set, 'SUSFS') }}
+      run: |
+        cat >> "$GITHUB_WORKSPACE/wild_gki.fragment" << 'EOF'
+        # Disable SUSFS (not included in feature set)
+        # CONFIG_KSU_SUSFS is not set
+        EOF
+
     - name: Setup Baseband Guard
       if: contains(inputs.feature_set, 'BBG')
       uses: ./.github/actions/bbg
