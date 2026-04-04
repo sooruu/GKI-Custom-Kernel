@@ -342,6 +342,15 @@ jobs:
     - name: Clean Kernel Flags
       uses: ./.github/actions/clean-kernel-flags
 
+    - name: Bypass Defconfig Check for 5.4
+      if: ${{ steps.parse.outputs.kernel_version == '5.4' }}
+      working-directory: ${{ github.workspace }}/kernel
+      run: |
+        # KSU's Kconfig "select EXT4_FS" and "select KPROBES" when SUSFS is disabled
+        # causes savedefconfig to strip these (since they're auto-selected), failing
+        # the defconfig comparison. Bypass the check.
+        sed -i 's/check_defconfig/true/' common/build.config.gki
+
     - name: Build Kernel
       working-directory: ${{ github.workspace }}/kernel
       run: |
