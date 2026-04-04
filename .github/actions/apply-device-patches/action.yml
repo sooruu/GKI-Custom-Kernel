@@ -1,5 +1,5 @@
 name: 'Apply Device-Specific Patches'
-description: 'Apply WiFi/Bluetooth fixes for Samsung and Xiaomi 6.6 GKI devices'
+description: 'Apply WiFi/Bluetooth fixes for Samsung and Xiaomi 6.6 GKI devices, and SM8635 performance fixes'
 inputs:
   kernel_version:
     description: 'Kernel version (e.g., 6.6)'
@@ -33,3 +33,68 @@ runs:
       run: |
         SYMBOL_LIST=android/abi_gki_aarch64_xiaomi
         echo "device_find_any_child" >> $SYMBOL_LIST
+
+    - name: SM8635 Fix — Allow vendor_init to write proc_walt nodes
+      if: ${{ inputs.kernel_version == '6.1' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        # proc_walt nodes (sched_fmax_cap, sched_upmigrate, sched_downmigrate etc.)
+        # are labeled proc_walt:s0 but vendor_init has no write permission in the
+        # upstream GKI policy. The post_boot script runs as vendor_init and needs
+        # to write these nodes to apply scheduler tuning.
+        # Fix: add write permission for vendor_init and init to proc_walt files.
+        POLICY_FILE="security/selinux/include/classmap.h"
+        VENDOR_INIT_TE=""
+
+        # Find the vendor_init policy file
+        for f in $(find . -path "*/sepolicy*" -name "vendor_init.te" 2>/dev/null); do
+          VENDOR_INIT_TE="$f"
+          break
+        done
+
+        if [ -n "$VENDOR_INIT_TE" ]; then
+          echo "" >> "$VENDOR_INIT_TE"
+          echo "# Allow vendor_init to write WALT scheduler proc nodes (SM8635 perf fix)" >> "$VENDOR_INIT_TE"
+          echo "allow vendor_init proc_walt:file { open read write getattr };" >> "$VENDOR_INIT_TE"
+          echo "allow init proc_walt:file { open read write getattr };" >> "$VENDOR_INIT_TE"
+          echo "Applied proc_walt SELinux fix to $VENDOR_INIT_TE"
+        else
+          echo "vendor_init.te not found in kernel tree — skipping (ROM sepolicy handles this)"
+        fi
+
+    - name: SM8635 Fix — metis-fboost deferred cpufreq policy init
+      if: ${{ inputs.kernel_version == '6.1' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        # metis-fboost tries to get cpufreq policies at 0.17s during boot,
+        # before the EPSS (qcom_cpufreq_hw) driver has registered them.
+        # This causes "Failed to get cpufreq policy for cpu0/3/7" and means
+        # the boost frequency path (3014400 for prime, 2803200 for gold) is
+        # never set up — cores are stuck below their hardware max.
+        #
+        # Fix: find the metis freq_qos init function and add a deferred probe
+        # retry so it waits for cpufreq policies to be available.
+
+        METIS_FILE=""
+        for f in $(find . -name "*.c" 2>/dev/null | xargs grep -l "metis_freq_qos_request_init" 2>/dev/null | head -3); do
+          METIS_FILE="$f"
+          break
+        done
+
+        if [ -n "$METIS_FILE" ]; then
+          echo "Found metis file: $METIS_FILE"
+          # Replace the hard failure with -EPROBE_DEFER so the driver retries
+          # once cpufreq policies are registered by the EPSS driver
+          sed -i 's/return -EINVAL;.*\/\* cpufreq policy not found \*\//return -EPROBE_DEFER; \/* retry after cpufreq ready *\//g' "$METIS_FILE" || true
+          # Also patch the direct error return on policy lookup failure
+          sed -i '/Failed to get cpufreq policy/{
+            N
+            s/return -[A-Z]*;/return -EPROBE_DEFER;/
+          }' "$METIS_FILE" || true
+          echo "Applied metis deferred probe fix to $METIS_FILE"
+        else
+          echo "metis freq_qos file not found in GKI tree — metis is likely a vendor module (DLKM)"
+          echo "This fix needs to be applied to the vendor DLKM kernel source instead"
+        fi
