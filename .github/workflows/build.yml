@@ -152,7 +152,8 @@ jobs:
       if: true
       run: |
         # Use SUBLEVEL for LTS builds, otherwise use the input sub_level
-        if [[ "$ANDROID_VERSION" == "android13" && "$KERNEL_VERSION" == "5.10" && $SUBLEVEL -le 186 ]] || 
+        if [[ "$ANDROID_VERSION" == "android12" && "$KERNEL_VERSION" == "5.4" ]] ||
+           [[ "$ANDROID_VERSION" == "android13" && "$KERNEL_VERSION" == "5.10" && $SUBLEVEL -le 186 ]] || 
            [[ "$ANDROID_VERSION" == "android13" && "$KERNEL_VERSION" == "5.15" && $SUBLEVEL -le 119 ]] || 
            [[ "$ANDROID_VERSION" == "android14" && "$KERNEL_VERSION" == "5.15" && $SUBLEVEL -le 110 ]] || 
            [[ "$ANDROID_VERSION" == "android14" && "$KERNEL_VERSION" == "6.1" && $SUBLEVEL -le 43 ]]; then

@@ -1,8 +1,7 @@
 {
   "include": [
     {
-      "kernel_version": "6.1.118-android14-2025-01",
-      "variant": "Bypass"
+      "kernel_version": "5.4.X-android12-lts"
     }
   ]
 }

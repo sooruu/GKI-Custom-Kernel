@@ -17,6 +17,7 @@ on:
         type: choice
         options:
           - all
+          - a12-5-4
           - a12-5-10
           - a13-5-10
           - a13-5-15
@@ -64,6 +65,19 @@ jobs:
         uses: ./.github/actions/fetch-commits
         with:
           ksu_commit: ${{ inputs.ksu_commit }}
+
+  build-a12-5-4:
+    if: ${{ inputs.kernel_build_version == 'all' || inputs.kernel_build_version == 'a12-5-4' }}
+    needs: fetch-commits
+    uses: ./.github/workflows/prepare.yml
+    with:
+      config_file: .github/kernel-config/a12-5.4.json
+      ksu_commit: ${{ inputs.ksu_commit || needs.fetch-commits.outputs.ksu_commit }}
+      anykernel_commit: ${{ needs.fetch-commits.outputs.anykernel_commit }}
+      patches_commit: ${{ needs.fetch-commits.outputs.patches_commit }}
+      susfs_commit: ${{ needs.fetch-commits.outputs.susfs_commit }}
+      feature_set: ${{ inputs.feature_set || 'WKSU+BBG' }}
+    secrets: inherit
 
   build-a12-5-10:
     if: ${{ inputs.kernel_build_version == 'all' || inputs.kernel_build_version == 'a12-5-10' }}
@@ -215,6 +229,7 @@ jobs:
       actions: read
       contents: read
     needs:
+    - build-a12-5-4
     - build-a12-5-10
     - build-a13-5-10
     - build-a13-5-15
@@ -284,6 +299,7 @@ jobs:
     permissions:
       contents: write
     needs:
+    - build-a12-5-4
     - build-a12-5-10
     - build-a13-5-10
     - build-a13-5-15
@@ -322,6 +338,7 @@ jobs:
           fi
         }
 
+        check_selected "a12-5-4" "build-a12-5-4" "${{ needs.build-a12-5-4.result }}"
         check_selected "a12-5-10" "build-a12-5-10" "${{ needs.build-a12-5-10.result }}"
         check_selected "a13-5-10" "build-a13-5-10" "${{ needs.build-a13-5-10.result }}"
         check_selected "a13-5-15" "build-a13-5-15" "${{ needs.build-a13-5-15.result }}"

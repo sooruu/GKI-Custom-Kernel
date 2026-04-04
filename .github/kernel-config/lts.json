@@ -1,5 +1,6 @@
 {
   "include": [
+    {"kernel_version": "5.4.X-android12-lts"},
     {"kernel_version": "5.10.X-android12-lts"},
     {"kernel_version": "5.10.X-android13-lts"},
     {"kernel_version": "5.15.X-android13-lts"},
