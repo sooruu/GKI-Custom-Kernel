@@ -18,10 +18,9 @@ runs:
         CONFIG_IP6_NF_TARGET_HL=y
         CONFIG_IP6_NF_MATCH_HL=y
 
-        # BBR TCP Congestion Control (default)
+        # BBR TCP Congestion Control
         CONFIG_TCP_CONG_ADVANCED=y
         CONFIG_TCP_CONG_BBR=y
-        CONFIG_DEFAULT_TCP_CONG="bbr"
         CONFIG_NET_SCH_FQ=y
         # CONFIG_TCP_CONG_BIC is not set
         # CONFIG_TCP_CONG_WESTWOOD is not set
