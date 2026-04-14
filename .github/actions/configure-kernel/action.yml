@@ -46,6 +46,15 @@ runs:
         CONFIG_IP_SET_HASH_NETPORT=y
         CONFIG_IP_SET_HASH_NETIFACE=y
         CONFIG_IP_SET_LIST_SET=y
+
+        # Timer frequency - smoother frame pacing for gaming
+        # CONFIG_HZ_250 is not set
+        CONFIG_HZ_300=y
+        CONFIG_HZ=300
+
+        # VM tuning - low swappiness default for gaming
+        CONFIG_ZRAM_DEF_COMP_ZSTD=y
+        # CONFIG_ZRAM_DEF_COMP_LZORLE is not set
         EOF
 
     - name: Apply Kernel Config for 5.10
@@ -54,3 +63,13 @@ runs:
       if: inputs.kernel_version == '5.10' || inputs.kernel_version == '5.4'
       run: |
         sed -i 's/CONFIG_IP_SET_MAX/65534/g' net/netfilter/ipset/ip_set_core.c
+
+    - name: Set default swappiness to 5
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        # Patch the kernel's default swappiness from 60 to 5
+        if [ -f mm/vmscan.c ]; then
+          sed -i 's/int vm_swappiness = 60;/int vm_swappiness = 5;/' mm/vmscan.c
+          echo "Patched vm_swappiness default to 5"
+        fi
