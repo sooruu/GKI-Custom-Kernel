@@ -56,12 +56,6 @@ runs:
         CONFIG_ZRAM_DEF_COMP_LZ4=y
         # CONFIG_ZRAM_DEF_COMP_ZSTD is not set
         # CONFIG_ZRAM_DEF_COMP_LZORLE is not set
-
-        # Scheduler - auto-group tasks to reduce game thread interference
-        CONFIG_SCHED_AUTOGROUP=y
-
-        # LZ4HC compression support
-        CONFIG_CRYPTO_LZ4HC=y
         EOF
 
     - name: Apply Kernel Config for 5.10
