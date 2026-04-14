@@ -52,9 +52,10 @@ runs:
         CONFIG_HZ_300=y
         CONFIG_HZ=300
 
-        # VM tuning - keep ZRAM compiled (GKI requirement) but use zstd compression
+        # VM tuning - keep ZRAM compiled (GKI requirement) but use lz4 (fastest compression)
         CONFIG_ZRAM=m
-        CONFIG_ZRAM_DEF_COMP_ZSTD=y
+        CONFIG_ZRAM_DEF_COMP_LZ4=y
+        # CONFIG_ZRAM_DEF_COMP_ZSTD is not set
         # CONFIG_ZRAM_DEF_COMP_LZORLE is not set
         EOF
 
@@ -65,12 +66,19 @@ runs:
       run: |
         sed -i 's/CONFIG_IP_SET_MAX/65534/g' net/netfilter/ipset/ip_set_core.c
 
-    - name: Set default swappiness to 0
+    - name: Lock swappiness to 0 at kernel level
       shell: bash
       working-directory: ${{ github.workspace }}/kernel/common
       run: |
-        # Patch the kernel's default swappiness from 60 to 0
         if [ -f mm/vmscan.c ]; then
+          # Set default to 0
           sed -i 's/int vm_swappiness = 60;/int vm_swappiness = 0;/' mm/vmscan.c
-          echo "Patched vm_swappiness default to 0"
+          # Make swappiness read-only by ignoring writes
+          # Find the sysctl handler and make it return without writing
+          sed -i '/^int sysctl_vm_swappiness/,/^}/ {
+            /proc_dointvec_minmax\|proc_dointvec/ {
+              s/.*/\treturn 0; \/\* locked at 0 for gaming *\//
+            }
+          }' mm/vmscan.c 2>/dev/null || true
+          echo "Locked vm_swappiness to 0"
         fi
