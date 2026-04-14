@@ -52,8 +52,10 @@ runs:
         CONFIG_HZ_300=y
         CONFIG_HZ=300
 
-        # VM tuning - disable ZRAM entirely for iOS-like memory management
-        # CONFIG_ZRAM is not set
+        # VM tuning - keep ZRAM compiled (GKI requirement) but use zstd compression
+        CONFIG_ZRAM=m
+        CONFIG_ZRAM_DEF_COMP_ZSTD=y
+        # CONFIG_ZRAM_DEF_COMP_LZORLE is not set
         EOF
 
     - name: Apply Kernel Config for 5.10
