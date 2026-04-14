@@ -16,9 +16,13 @@ on:
         description: "Feature Set"
         type: choice
         options:
+          - WKSU+SUSFS+BBG
+          - WKSU+SUSFS
+          - WKSU+BBG
+          - WKSU
           - BBG
           - None
-        default: BBG
+        default: WKSU+SUSFS+BBG
       ksu_commit:
         description: "KSU Commit (optional)"
         type: string
@@ -54,7 +58,7 @@ jobs:
       anykernel_commit: ${{ needs.fetch-commits.outputs.anykernel_commit }}
       patches_commit: ${{ needs.fetch-commits.outputs.patches_commit }}
       susfs_commit: ${{ needs.fetch-commits.outputs.susfs_commit }}
-      feature_set: ${{ inputs.feature_set || 'BBG' }}
+      feature_set: ${{ inputs.feature_set || 'WKSU+SUSFS+BBG' }}
     secrets: inherit
 
   rej:
